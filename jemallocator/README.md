@@ -59,13 +59,13 @@ The following table describes the supported platforms:
 Tier 1 targets are tested on all Rust channels (stable, beta, and nightly). All
 other targets are only tested on Rust nightly.
 
-| Linux targets:                      | build     | run     | jemalloc     |
-|-------------------------------------|-----------|---------|--------------|
-| `aarch64-unknown-linux-gnu`         | ✓         | ✓       | ✗            |
-| `powerpc64le-unknown-linux-gnu`     | ✓         | ✓       | ✗            |
-| `x86_64-unknown-linux-gnu` (tier 1) | ✓         | ✓       | ✓            |
-| **MacOSX targets:**                 | **build** | **run** | **jemalloc** |
-| `aarch64-apple-darwin`              | ✓         | ✓       | ✗            |
+| Platform | Target                              | build | run | jemalloc |
+|----------|-------------------------------------|-------|-----|----------|
+| Linux    | `aarch64-unknown-linux-gnu`         | ✓     | ✓   | ✗        |
+| Linux    | `powerpc64le-unknown-linux-gnu`     | ✓     | ✓   | ✗        |
+| Linux    | `x86_64-unknown-linux-gnu` (tier 1) | ✓     | ✓   | ✓        |
+| macOS    | `aarch64-apple-darwin`              | ✓     | ✓   | ✗        |
+| illumos  | `x86_64-unknown-illumos`            | ✓     | ✓   | ✓        |
 
 ## Features
 
