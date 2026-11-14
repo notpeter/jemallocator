@@ -379,8 +379,16 @@ fn main() {
     // during the final linking. https://github.com/riscv-collab/riscv-gcc/issues/12
     if target.contains("riscv") {
         println!("cargo:rustc-link-lib=atomic");
+        // Base rv64gc has no count-trailing-zeros instruction (that is Zbb), so gcc
+        // lowers the ffs in bit_util.h to a __ffsdi2 call. compiler_builtins carries
+        // the rest of the *di2 family but not that one, so a -nodefaultlibs link
+        // needs libgcc named, as on android above.
+        if compiler.is_like_gnu() {
+            println!("cargo:rustc-link-lib=gcc");
+        }
     }
     println!("cargo:rerun-if-changed=jemalloc");
+    println!("cargo:rerun-if-changed=configure/configure");
 
     if target.contains("android") {
         // These symbols are used by jemalloc on android but the really old android
@@ -504,6 +512,18 @@ impl BackgroundThreadSupport {
                 "`background_threads_runtime_support` not supported for `{}`",
                 target
             );
+            if always_enabled {
+                // jemalloc rejects `background_thread:true` on these targets
+                // and its initialization never completes, so don't put it in
+                // the default `malloc_conf`.
+                warning!(
+                    "`background_threads` not supported for `{}`; not enabling background threads by default",
+                    target
+                );
+            }
+            return Some(Self {
+                always_enabled: false,
+            });
         }
 
         Some(Self { always_enabled })

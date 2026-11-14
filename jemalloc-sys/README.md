@@ -19,7 +19,25 @@
 [jemalloc_docs]: http://jemalloc.net/jemalloc.3.html
 [jemalloc_wiki]: https://github.com/jemalloc/jemalloc/wiki
 
-**Current jemalloc version**: 5.3.1.
+**Current jemalloc version**: development snapshot
+`5.4.0-95-gecb4556becc8d0b54ab9627d8b5508a5295904ff`.
+
+### Updating the bundled jemalloc
+
+The submodule pins the C sources. `configure/configure` is generated from its
+`configure.ac` and committed separately so crate users do not need Autoconf.
+After updating the submodule, regenerate it with GNU Autoconf 2.71 from the
+repository root:
+
+```sh
+(cd jemalloc-sys/jemalloc && autoconf -o ../configure/configure)
+git -C jemalloc-sys/jemalloc describe --long --abbrev=40
+```
+
+Use the reported version as the suffix after `+` in `jemalloc-sys/Cargo.toml`
+and update the version above. Commit the submodule pointer, generated script,
+and version together. `build.rs` copies the sources and script to Cargo's build
+directory, then runs `configure` there with the selected Cargo features.
 
 ## Platform support
 
@@ -44,6 +62,24 @@ This crate provides following cargo feature flags:
   * `libunwind` (requires --enable-prof-libunwind)
   * `libgcc` (unless --disable-prof-libgcc)
   * `gcc intrinsics` (unless --disable-prof-gcc)
+
+  The matching `profiling` feature in `tikv-jemalloc-ctl` also exposes
+  `jemalloc`'s experimental `experimental.hooks.prof_sample`/
+  `prof_sample_free`/`prof_backtrace` hooks, letting an external sampler (e.g.
+  an eBPF profiler) piggyback `jemalloc`'s sampling decision. To avoid
+  `jemalloc`'s own stack walk, install `noop_prof_backtrace_hook` through
+  `set_prof_backtrace_hook`. These hooks are not re-exported by
+  `tikv-jemallocator`.
+
+  The feature compiles profiling support but does not enable profiling. To
+  enable it, configure `prof:true` before `jemalloc` initialises. This can be
+  done at process launch with the appropriate `MALLOC_CONF` environment
+  variable, typically `_RJEM_MALLOC_CONF` for prefixed builds. Use
+  `prof:true,prof_active:false` to install hooks before enabling sampling
+  through `prof.active`, or use `prof:true` to begin sampling immediately with
+  the default per-thread settings. Alternatively,
+  `JEMALLOC_SYS_WITH_MALLOC_CONF` can embed the same
+  configuration at build time.
 
 * `profiling_libunwind` (configure `jemalloc` with `--enable-prof-libunwind`):
   Force jemalloc to use `libunwind` for backtracing during heap profiling
@@ -76,7 +112,8 @@ This crate provides following cargo feature flags:
   process will be disabled regardless the state in parent process. See
   `stats.background_thread` for related stats. `opt.background_thread` can be
   used to set the default option. The background thread is only available on
-  selected pthread-based platforms.
+  selected pthread-based platforms; on targets where it is not supported (Apple
+  targets) this feature has no effect.
 
 * `unprefixed_malloc_on_supported_platforms`: when disabled, configure
   `jemalloc` with `--with-jemalloc-prefix=_rjem_`. Enabling this causes symbols
