@@ -19,7 +19,25 @@
 [jemalloc_docs]: http://jemalloc.net/jemalloc.3.html
 [jemalloc_wiki]: https://github.com/jemalloc/jemalloc/wiki
 
-**Current jemalloc version**: 5.4.0.
+**Current jemalloc version**: development snapshot
+`5.4.0-95-gecb4556becc8d0b54ab9627d8b5508a5295904ff`.
+
+### Updating the bundled jemalloc
+
+The submodule pins the C sources. `configure/configure` is generated from its
+`configure.ac` and committed separately so crate users do not need Autoconf.
+After updating the submodule, regenerate it with GNU Autoconf 2.71 from the
+repository root:
+
+```sh
+(cd jemalloc-sys/jemalloc && autoconf -o ../configure/configure)
+git -C jemalloc-sys/jemalloc describe --long --abbrev=40
+```
+
+Use the reported version as the suffix after `+` in `jemalloc-sys/Cargo.toml`
+and update the version above. Commit the submodule pointer, generated script,
+and version together. `build.rs` copies the sources and script to Cargo's build
+directory, then runs `configure` there with the selected Cargo features.
 
 ## Platform support
 

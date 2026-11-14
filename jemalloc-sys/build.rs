@@ -388,6 +388,7 @@ fn main() {
         }
     }
     println!("cargo:rerun-if-changed=jemalloc");
+    println!("cargo:rerun-if-changed=configure/configure");
 
     if target.contains("android") {
         // These symbols are used by jemalloc on android but the really old android
@@ -465,6 +466,7 @@ fn gnu_target(target: &str) -> String {
             "riscv64-linux-gnu".to_string()
         }
         "riscv64gc-unknown-linux-musl" => "riscv64-linux-musl".to_string(),
+        "x86_64-unknown-illumos" => "x86_64-pc-solaris2.11".to_string(),
         s => s.to_string(),
     }
 }
@@ -474,6 +476,7 @@ fn make_cmd(host: &str) -> &'static str {
         "bitrig",
         "dragonfly",
         "freebsd",
+        "illumos",
         "netbsd",
         "openbsd",
         "chimera-linux",
